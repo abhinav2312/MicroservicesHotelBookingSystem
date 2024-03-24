@@ -23,7 +23,7 @@ public class BookingsService {
     private final BookingsRepository bookingsRepository;
     private final WebClient.Builder webClientBuilder;
 
-    public void makeBooking(BookingsRequest bookingsRequest){
+    public String makeBooking(BookingsRequest bookingsRequest){
         Booking booking=new Booking();
         booking.setBookingNumber(UUID.randomUUID().toString());
 
@@ -57,6 +57,7 @@ public class BookingsService {
 
         if(allRoomsAvailable) {
             bookingsRepository.save(booking);
+            return "Booking made Successfully";
         }
         else {
             throw new IllegalArgumentException(" Rooms are not available , Please Try Later");
