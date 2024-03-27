@@ -3,10 +3,12 @@ package com.ddsproject.bookingsservice.service;
 import com.ddsproject.bookingsservice.dto.BookingLineItemsDto;
 import com.ddsproject.bookingsservice.dto.BookingsRequest;
 import com.ddsproject.bookingsservice.dto.InventoryResponse;
+import com.ddsproject.bookingsservice.event.BookingsPlacedEvent;
 import com.ddsproject.bookingsservice.model.Booking;
 import com.ddsproject.bookingsservice.model.BookingLineItems;
 import com.ddsproject.bookingsservice.repository.BookingsRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -22,7 +24,7 @@ public class BookingsService {
 
     private final BookingsRepository bookingsRepository;
     private final WebClient.Builder webClientBuilder;
-
+    private final KafkaTemplate<String, BookingsPlacedEvent> kafkaTemplate;
     public String makeBooking(BookingsRequest bookingsRequest){
         Booking booking=new Booking();
         booking.setBookingNumber(UUID.randomUUID().toString());
@@ -57,6 +59,7 @@ public class BookingsService {
 
         if(allRoomsAvailable) {
             bookingsRepository.save(booking);
+            kafkaTemplate.send("notificationTopic", new BookingsPlacedEvent(booking.getBookingNumber()));
             return "Booking made Successfully";
         }
         else {
